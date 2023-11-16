@@ -45,3 +45,37 @@ list.forEach(item =>
 
 const addedContents = fs.readFileSync('./message-sync.txt').toString();
 console.log(addedContents);
+
+// 4. 디렉토리 생성
+// fs.existsSync(dir): 폴더 존재 여부 확인
+// fs.mkdirSync(dir): 폴더 만들기
+
+const dirName = `${__dirname}/folder`;
+
+if (!fs.existsSync(dirName)) {
+  fs.mkdirSync(dirName);
+}
+
+// 5. 파일 리스트 출력
+// fs.readdirSync(path)
+const filenameList = fs.readdirSync('./');
+
+filenameList.forEach(filename => console.log(filename));
+/* fs.js
+message-sync.txt
+message.txt */
+
+// 6. 파일 이름 변경
+// fs.rename(from, to, callback)
+const renameFile = function (from, to) {
+  var callback = err => {
+    if (err) console.log(`ERROR: ${err}`);
+  };
+
+  fs.rename(from, to, callback);
+};
+
+const fromPathname = './hello.txt';
+const toPathname = './bye.txt';
+
+renameFile(fromPathname, toPathname);
