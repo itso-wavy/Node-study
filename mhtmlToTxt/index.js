@@ -1,4 +1,4 @@
-// cmd ex: node index.js '0-1' '제목' 1
+// cmd ex: node . '0-1' '제목' 1
 
 // 1. mhtmlToHtml
 // 2. htmlToTxt
@@ -65,6 +65,18 @@ function deleteRestFiles(folderPath, startEpisode) {
       return;
     }
 
+    files.sort((a, b) => {
+      const getNumberPart = str => {
+        const match = str.match(/\d+/);
+        return match ? parseInt(match[0], 10) : NaN;
+      };
+
+      const aNumber = getNumberPart(a);
+      const bNumber = getNumberPart(b);
+
+      return aNumber - bNumber || a.localeCompare(b, 'en', { numeric: true });
+    });
+
     files.forEach(file => {
       const filePath = folderPath + file;
 
@@ -73,6 +85,7 @@ function deleteRestFiles(folderPath, startEpisode) {
         file.endsWith(fileNameTemplate + '.html') ||
         file.endsWith(fileNameTemplate + '.mhtml')
       ) {
+        console.log('file: ', file);
         fs.unlink(filePath, err => {});
 
         if (file.endsWith('.mhtml'))
