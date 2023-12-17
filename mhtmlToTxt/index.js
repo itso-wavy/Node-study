@@ -1,3 +1,10 @@
+// cmd ex: node index.js '0-1' '제목' 1
+
+// 1. mhtmlToHtml
+// 2. htmlToTxt
+// 3. checkNextFileExist
+// 4. 쓸 데 없는 png, mhtml, html 등을 삭제
+
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { exec } = require('child_process');
@@ -48,7 +55,10 @@ function htmlToTxt(filePath, outputFilePath) {
   });
 }
 
-function deletePngFiles(folderPath) {
+function deleteRestFiles(folderPath, startEpisode) {
+  let episode = startEpisode;
+  let fileNameTemplate = ` ${episode}화 - 리디`;
+
   fs.readdir(folderPath, (err, files) => {
     if (err) {
       console.error(`Error reading directory: ${err}`);
@@ -56,10 +66,17 @@ function deletePngFiles(folderPath) {
     }
 
     files.forEach(file => {
-      if (file.endsWith('.png')) {
-        const filePath = `${folderPath}/${file}`;
+      const filePath = folderPath + file;
 
+      if (
+        file.endsWith('리디.001.png') ||
+        file.endsWith(fileNameTemplate + '.html') ||
+        file.endsWith(fileNameTemplate + '.mhtml')
+      ) {
         fs.unlink(filePath, err => {});
+
+        if (file.endsWith('.mhtml'))
+          fileNameTemplate = ` ${++episode}화 - 리디`;
       }
     });
   });
@@ -99,16 +116,9 @@ async function mhtmlToTxt(process) {
   }
 
   await checkNextFileExist();
-  await deletePngFiles(folderPath);
+  await deleteRestFiles(folderPath, startEpisode);
 
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
 mhtmlToTxt(process);
-
-// cmd ex: node index.js '0-1' '제목' 1
-
-// 1. mhtmlToHtml
-// 2. htmlToTxt
-// 3. checkNextFileExist
-// 4. 쓸 데 없는 png, mhtml, html 등을 삭제
