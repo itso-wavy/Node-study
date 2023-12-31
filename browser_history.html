@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>browser history</title>
+</head>
+<body>
+  <ul class="user-list">
+    <li data-name='jay'>jay</li>
+    <li data-name='keise'>keise</li>
+    <li data-name='brien'>brien</li>
+  </ul>
+  <script>
+    const $userList = document.querySelector('.user-list')
+
+    $userList.addEventListener('click', e => {
+      const $liElement = e.target
+
+      if ($liElement === 'LI') {
+        const selectedName = $liElement.dataset.name
+
+        select($userList, $liElement)
+
+        history.pushState(selectedName, selectedName + ' page', selectedName)
+        // history.pushState: url 변경 + 히스토리 추가 기능
+        // 인자: (state 객체, title 문자열, url 문자열)
+        // history.back, history.forward, history.go(-1)과는 다르게 popstate 이벤트가 발생하지 않음
+      }
+    })
+
+    window.addEventListener('popstate', function (e) {
+      const $selectedUser = document.querySelector(`.user-list [data-name="${e.state}"]`)
+
+      select($userList, $selectedUser)
+    })
+
+    /** ul > li의 selected 클래스를 모두 제거하고 선택한 li에만 selected 클래스를 다시 부여하는 함수 */
+    function select($ulEle, $liEle) {
+      Array.from($ulEle.children).forEach(v => v.classList.remove('selected'))
+
+      if ($liEle) {
+        $liEle.classList.add('selected')
+      }
+    }
+  </script>
+</body>
+</html>

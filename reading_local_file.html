@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reading local file on browser</title>
+</head>
+<body>
+  <div id="file-box">
+    이미지 파일 선택 후 여기로 드래그
+  </div>
+  <output id="result"></output>
+  <script>
+    const dropZone = document.getElementById('file-box')
+    dropZone.addEventListener('dragover', e => {
+      e.stopPropagation()
+      e.preventDefault()
+    })
+    dropZone.addEventListener('drop', e => {
+      e.stopPropagation()
+      e.preventDefault()
+
+      const files = e.dataTransfer.files
+      // dataTransferP: drag/drop시의 아이템을 담는 객체
+      // 문자열 또는 파일을 담을 수 있고, 그 중 파일은 files로 접근함(FileList 타입)
+
+      Array.from(files).filter(file => file.type.match('image.*')).forEach(file => {
+        // FileList를 Array로 변경 후 image 파일만 필터링하여 비동기로 읽어 옴
+        const reader = new FileReader()
+        reader.onload = e => {
+          const imgElement = document.createElement('img')
+          imgElement.src = e.target.result
+          imgElement.title = file.name
+          document.getElementById('result').appendChild(imgElement)
+        }
+        reader.readAsDataURL // ★
+      })
+
+    })
+  </script>
+</body>
+</html>
