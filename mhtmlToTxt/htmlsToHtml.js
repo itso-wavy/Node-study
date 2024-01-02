@@ -11,11 +11,19 @@ function htmlToTxt(filePath, outputFilePath) {
   const dom = new JSDOM(trimmedHtml);
   const document = dom.window.document;
 
-  const pagesElements = document.querySelectorAll('div.pages > article');
+  const pagesElements = document.querySelectorAll(
+    'div.pages > article.chapter'
+  );
+
   const rightElement = document.querySelector('.content_footer');
   rightElement.parentNode.removeChild(rightElement);
 
+  Array.from(pagesElements).forEach(article => {
+    article.parentNode.removeChild(article);
+  });
+
   const newHtml = Array.from(pagesElements)
+    .filter(article => !article.querySelector('img'))
     .map(ele => ele.outerHTML)
     .join('');
 
@@ -62,7 +70,7 @@ function deleteRestFiles(folderPath, startEpisode) {
   });
 }
 
-async function excute(process) {
+async function htmlsToHtml(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
   if (process.argv.length < 5) {
     folderNumber = '';
@@ -95,9 +103,9 @@ async function excute(process) {
   }
 
   await checkNextFileExist();
-  await deleteRestFiles(folderPath, startEpisode);
+  // await deleteRestFiles(folderPath, startEpisode);
 
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
-excute(process);
+htmlsToHtml(process);
