@@ -1,57 +1,27 @@
 // cmd ex: node . '0-1' '제목' 1
 
-// 1. mhtmlToHtml
-// 2. htmlToTxt
-// 3. checkNextFileExist
-// 4. 쓸 데 없는 png, mhtml, html 등을 삭제
-
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
-const { exec } = require('child_process');
-
-const PYTHON_SCRIPT_PATH = 'mhtmlToHtml.py';
-
-async function mhtmlToHtml(filePath) {
-  return new Promise((resolve, reject) => {
-    exec(`python "${PYTHON_SCRIPT_PATH}" "${filePath}"`, (error, stdout) => {
-      if (error) {
-        console.error(`Error: ${error.message}`);
-        reject(error);
-        return;
-      }
-      console.log(filePath);
-      resolve(stdout);
-    });
-  });
-}
 
 function htmlToTxt(filePath, outputFilePath) {
   const htmlFileName = filePath + `.html`;
   const html = fs.readFileSync(htmlFileName).toString();
+  const trimmedHtml = html.replaceAll('user-select:none', '');
 
-  const dom = new JSDOM(html);
+  const dom = new JSDOM(trimmedHtml);
   const document = dom.window.document;
 
-  const textElements = document.querySelectorAll('body > div > p');
-  const excludeElementIndex = Array.from(textElements).findIndex(
-    $ele =>
-      $ele.getAttribute('style') ===
-      'margin-top:67.5pt; margin-bottom:0pt; line-height:13.25pt; padding-top:11pt; padding-bottom:11pt; background-color:#ffffff'
-  );
+  const pagesElements = document.querySelectorAll('div.pages > article');
+  const rightElement = document.querySelector('.content_footer');
+  rightElement.parentNode.removeChild(rightElement);
 
-  // if (excludeElementIndex !== -1) return;
-  const includedElements = Array.from(textElements).slice(
-    1,
-    excludeElementIndex
-  );
+  const newHtml = Array.from(pagesElements)
+    .map(ele => ele.outerHTML)
+    .join('');
 
-  includedElements.forEach(ele => {
-    const content = ele.textContent + '\n\n';
-
-    fs.writeFileSync(outputFilePath, content, {
-      encoding: 'utf8',
-      flag: 'a',
-    });
+  fs.writeFileSync(outputFilePath, newHtml, {
+    encoding: 'utf8',
+    flag: 'a',
   });
 }
 
@@ -82,19 +52,17 @@ function deleteRestFiles(folderPath, startEpisode) {
 
       if (
         file.endsWith('리디.001.png') ||
-        file.endsWith(fileNameTemplate + '.html') ||
-        file.endsWith(fileNameTemplate + '.mhtml')
+        file.endsWith(fileNameTemplate + '.html')
       ) {
         fs.unlink(filePath, err => {});
 
-        if (file.endsWith('.mhtml'))
-          fileNameTemplate = ` ${++episode}화 - 리디`;
+        fileNameTemplate = ` ${++episode}화 - 리디`;
       }
     });
   });
 }
 
-async function mhtmlToTxt(process) {
+async function excute(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
   if (process.argv.length < 5) {
     folderNumber = '';
@@ -107,11 +75,10 @@ async function mhtmlToTxt(process) {
   let folderPath = `../${folderNumber} ${title}/`;
   if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
   let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
-  let outputFilePath = folderPath + `${startEpisode}.txt`;
+  let outputFilePath = folderPath + `${startEpisode}.html`;
 
   async function checkNextFileExist() {
-    while (fs.existsSync(filePath + '.mhtml')) {
-      await mhtmlToHtml(filePath);
+    while (fs.existsSync(filePath + '.html')) {
       htmlToTxt(filePath, outputFilePath);
 
       currentEpisode++;
@@ -120,9 +87,9 @@ async function mhtmlToTxt(process) {
 
     fs.renameSync(
       outputFilePath,
-      folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.txt`,
+      folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.html`,
       error => {
-        console.log('txt 파일명 수정 불가!');
+        console.log('파일명 수정 불가!');
       }
     );
   }
@@ -133,4 +100,4 @@ async function mhtmlToTxt(process) {
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
-mhtmlToTxt(process);
+excute(process);

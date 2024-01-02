@@ -1,3 +1,4 @@
+# pip install aspose-words
 # export PYTHONIOENCODING=utf-8
 
 import sys
