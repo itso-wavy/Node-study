@@ -3,6 +3,17 @@
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 
+const DOMAIN = 'ridi';
+
+const getFileNameTemplate = (domain, episode) => {
+  switch (domain) {
+    case 'ridi':
+      return ` ${episode}화 - 리디`;
+    default:
+      return episode;
+  }
+};
+
 function htmlToTxt(filePath, outputFilePath) {
   const htmlFileName = filePath + `.html`;
   const html = fs.readFileSync(htmlFileName).toString();
@@ -35,7 +46,8 @@ function htmlToTxt(filePath, outputFilePath) {
 
 function deleteRestFiles(folderPath, startEpisode) {
   let episode = startEpisode;
-  let fileNameTemplate = ` ${episode}화 - 리디`;
+  // let fileNameTemplate = ` ${episode}화 - 리디`;
+  let fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
 
   fs.readdir(folderPath, (err, files) => {
     if (err) {
@@ -64,7 +76,9 @@ function deleteRestFiles(folderPath, startEpisode) {
       ) {
         fs.unlink(filePath, err => {});
 
-        fileNameTemplate = ` ${++episode}화 - 리디`;
+        ++episode;
+        fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
+        // fileNameTemplate = ` ${++episode}화 - 리디`;
       }
     });
   });
@@ -82,7 +96,9 @@ async function htmlsToHtml(process) {
 
   let folderPath = `../${folderNumber} ${title}/`;
   if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
-  let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+  // let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`
+  let filePath =
+    folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
   let outputFilePath = folderPath + `${startEpisode}.html`;
 
   async function checkNextFileExist() {
@@ -91,6 +107,9 @@ async function htmlsToHtml(process) {
 
       currentEpisode++;
       filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+      // filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+      filePath =
+        folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
 
     fs.renameSync(

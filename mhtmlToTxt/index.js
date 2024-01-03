@@ -10,6 +10,18 @@ const { JSDOM } = require('jsdom');
 const { exec } = require('child_process');
 
 const PYTHON_SCRIPT_PATH = 'mhtmlToHtml.py';
+const STYLE_TEMPLATE =
+  'margin-top:67.5pt; margin-bottom:0pt; line-height:13.25pt; padding-top:11pt; padding-bottom:11pt; background-color:#ffffff';
+const DOMAIN = 'ridi';
+
+const getFileNameTemplate = (domain, episode) => {
+  switch (domain) {
+    case 'ridi':
+      return ` ${episode}화 - 리디`;
+    default:
+      return episode;
+  }
+};
 
 async function mhtmlToHtml(filePath) {
   return new Promise((resolve, reject) => {
@@ -34,12 +46,9 @@ function htmlToTxt(filePath, outputFilePath) {
 
   const textElements = document.querySelectorAll('body > div > p');
   const excludeElementIndex = Array.from(textElements).findIndex(
-    $ele =>
-      $ele.getAttribute('style') ===
-      'margin-top:67.5pt; margin-bottom:0pt; line-height:13.25pt; padding-top:11pt; padding-bottom:11pt; background-color:#ffffff'
+    $ele => $ele.getAttribute('style') === STYLE_TEMPLATE
   );
 
-  // if (excludeElementIndex !== -1) return;
   const includedElements = Array.from(textElements).slice(
     1,
     excludeElementIndex
@@ -57,7 +66,8 @@ function htmlToTxt(filePath, outputFilePath) {
 
 function deleteRestFiles(folderPath, startEpisode) {
   let episode = startEpisode;
-  let fileNameTemplate = ` ${episode}화 - 리디`;
+  // let fileNameTemplate = ` ${episode}화 - 리디`;
+  let fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
 
   fs.readdir(folderPath, (err, files) => {
     if (err) {
@@ -87,8 +97,11 @@ function deleteRestFiles(folderPath, startEpisode) {
       ) {
         fs.unlink(filePath, err => {});
 
-        if (file.endsWith('.mhtml'))
-          fileNameTemplate = ` ${++episode}화 - 리디`;
+        if (file.endsWith('.mhtml')) {
+          ++episode;
+          fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
+          // fileNameTemplate = ` ${++episode}화 - 리디`;
+        }
       }
     });
   });
@@ -106,7 +119,9 @@ async function mhtmlToTxt(process) {
 
   let folderPath = `../${folderNumber} ${title}/`;
   if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
-  let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+  // let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`
+  let filePath =
+    folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
   let outputFilePath = folderPath + `${startEpisode}.txt`;
 
   async function checkNextFileExist() {
@@ -115,7 +130,9 @@ async function mhtmlToTxt(process) {
       htmlToTxt(filePath, outputFilePath);
 
       currentEpisode++;
-      filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+      // filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+      filePath =
+        folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
 
     fs.renameSync(
