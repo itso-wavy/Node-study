@@ -46,7 +46,6 @@ function htmlToTxt(filePath, outputFilePath) {
 
 function deleteRestFiles(folderPath, startEpisode) {
   let episode = startEpisode;
-  // let fileNameTemplate = ` ${episode}화 - 리디`;
   let fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
 
   fs.readdir(folderPath, (err, files) => {
@@ -78,7 +77,6 @@ function deleteRestFiles(folderPath, startEpisode) {
 
         ++episode;
         fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
-        // fileNameTemplate = ` ${++episode}화 - 리디`;
       }
     });
   });
@@ -86,20 +84,38 @@ function deleteRestFiles(folderPath, startEpisode) {
 
 async function htmlsToHtml(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
+
+  let folderType;
+  switch (folderNumber) {
+    case '0':
+      folderType = '0 soon';
+      break;
+    case '1':
+      folderType = '1 read';
+      break;
+    case '2':
+      folderType = '2 continuous';
+      break;
+    case '3':
+      folderType = '3 test';
+      break;
+    default:
+      folderType = '';
+  }
+
   if (process.argv.length < 5) {
-    folderNumber = '';
     title = process.argv[2];
     startEpisode = process.argv[3];
   }
 
   let currentEpisode = startEpisode;
 
-  let folderPath = `../${folderNumber} ${title}/`;
-  if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
-  // let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`
+  let folderPath = `../${folderType}/${title}/`;
+  if (!folderType) folderPath = `../${title}/`;
+
   let filePath =
     folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
-  let outputFilePath = folderPath + `${startEpisode}.html`;
+  let outputFilePath = folderPath + `${startEpisode}.txt`;
 
   async function checkNextFileExist() {
     while (fs.existsSync(filePath + '.html')) {
@@ -107,18 +123,19 @@ async function htmlsToHtml(process) {
 
       currentEpisode++;
       filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
-      // filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
       filePath =
         folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
 
-    fs.renameSync(
-      outputFilePath,
-      folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.html`,
-      error => {
-        console.log('파일명 수정 불가!');
-      }
-    );
+    let newFileName = folderPath + `${title} ${startEpisode}.txt`;
+    if (startEpisode != currentEpisode - 1) {
+      newFileName =
+        folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.txt`;
+    }
+
+    fs.renameSync(outputFilePath, newFileName, error => {
+      console.log('txt 파일명 수정 불가!');
+    });
   }
 
   await checkNextFileExist();

@@ -10,7 +10,7 @@ const { JSDOM } = require('jsdom');
 const { exec } = require('child_process');
 
 const PYTHON_SCRIPT_PATH = 'mhtmlToHtml.py';
-const STYLE_TEMPLATE =
+const RIGHT_ELEMENT_STYLE =
   'margin-top:67.5pt; margin-bottom:0pt; line-height:13.25pt; padding-top:11pt; padding-bottom:11pt; background-color:#ffffff';
 const DOMAIN = 'ridi';
 
@@ -46,7 +46,7 @@ function htmlToTxt(filePath, outputFilePath) {
 
   const textElements = document.querySelectorAll('body > div > p');
   const excludeElementIndex = Array.from(textElements).findIndex(
-    $ele => $ele.getAttribute('style') === STYLE_TEMPLATE
+    $ele => $ele.getAttribute('style') === RIGHT_ELEMENT_STYLE
   );
 
   const includedElements = Array.from(textElements).slice(
@@ -109,16 +109,37 @@ function deleteRestFiles(folderPath, startEpisode) {
 
 async function mhtmlToTxt(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
+
+  let folderType;
+  switch (folderNumber) {
+    case '0':
+      folderType = '0 soon';
+      break;
+    case '1':
+      folderType = '1 read';
+      break;
+    case '2':
+      folderType = '2 continuous';
+      break;
+    case '3':
+      folderType = '3 test';
+      break;
+    default:
+      folderType = '';
+  }
+
   if (process.argv.length < 5) {
-    folderNumber = '';
+    // folderNumber = '';
     title = process.argv[2];
     startEpisode = process.argv[3];
   }
 
   let currentEpisode = startEpisode;
 
-  let folderPath = `../${folderNumber} ${title}/`;
-  if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
+  let folderPath = `../${folderType}/${title}/`;
+  if (!folderType) folderPath = `../${title}/`;
+  // let folderPath = `../${folderNumber} ${title}/`;
+  // if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
   // let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`
   let filePath =
     folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
@@ -135,13 +156,15 @@ async function mhtmlToTxt(process) {
         folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
 
-    fs.renameSync(
-      outputFilePath,
-      folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.txt`,
-      error => {
-        console.log('txt 파일명 수정 불가!');
-      }
-    );
+    let newFileName = folderPath + `${title} ${startEpisode}.txt`;
+    if (startEpisode != currentEpisode - 1) {
+      newFileName =
+        folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.txt`;
+    }
+
+    fs.renameSync(outputFilePath, newFileName, error => {
+      console.log('txt 파일명 수정 불가!');
+    });
   }
 
   await checkNextFileExist();
