@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>file-upload-client</title>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid;
+    }
+  </style>
+</head>
+<body>
+  <h2>파일 업로드</h2>
+  <form action="" id="upload-form"><input type="file">
+    <button onclick="uploadFile()">upload</button>
+  </form>
+  <div id="fileList"></div>
+
+  <script>
+    const $fileList = document.getElementById('fileList')
+    // const $button = document.querySelector('form#upload-form > button')
+
+    fetch('http://localhost:3000/file_list', {
+      headers: { Accept: 'application/json' }, // 응답을 json 형태로 요청
+      method: 'GET',
+    }).then(res => {
+      if (res.status >= 400) { // 400 이상은 비정상 코드, catch문에서 에러 처리
+        return Promise.reject(new Error(`status: ${res.status}`))
+      }
+      return res.json()
+    }).then(data => {
+      let table = '<table><tr><td>파일 리스트</td><td>업로드 시간</td></tr>'
+
+      data.forEach(file => {
+        const timestamp = file.match(/\d\w+/g)
+        const time = timestamp[0]
+        const date = new Date(Number(time))
+
+        table += `<tr><td>${file}</td><td>${date}</td></tr>`
+      })
+
+      table += '</table>'
+      $fileList.innerHTML = table
+    }).catch(err => alert(err))
+
+    const uploadFile = () => {
+      const $input = document.querySelector('input[type="file"]');
+      const formData = new FormData()
+
+      formData.append('file', input.files[0])
+
+      fetch('http://localhost:3000/upload', {
+        headers: { Accept: 'application/json' },
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        if (res.status >= 400) {
+          return Promise.reject(new Error(`status: ${res.status}`))
+        }
+        return res.text() // utf-8로 디코딩된 텍스트 응답 결과를 반환👼 
+      }).then(res => alert(res))
+        .catch(err => alert(err))
+    }
+  </script>
+</body>
+</html>
