@@ -1,9 +1,8 @@
-// cmd ex: node . '0-1' '제목' 1
+// cmd ex: node 'htmlsToHtml' 1 '제목' 1
 
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
-
-const DOMAIN = 'ridi';
+const { EBOOK_PATH, DOMAIN, FOLDER } = require('./constants');
 
 const getFileNameTemplate = (domain, episode) => {
   switch (domain) {
@@ -84,24 +83,30 @@ function deleteRestFiles(folderPath, startEpisode) {
 
 async function htmlsToHtml(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
+  let innerFolder = [];
 
   let folderType;
   switch (folderNumber) {
     case '0':
-      folderType = '0 soon';
+      folderType = '0 read';
+      innerFolder = ['[OLD]', '[60]'];
       break;
     case '1':
-      folderType = '1 read';
+      folderType = '1 continuous';
+      innerFolder = ['[$]'];
       break;
     case '2':
-      folderType = '2 continuous';
-      break;
-    case '3':
-      folderType = '3 test';
+      folderType = '2 test';
       break;
     default:
       folderType = '';
   }
+
+  innerFolder.forEach(folder => {
+    if (FOLDER[folderType][folder][title]) {
+      folderType = '0 read/' + folder;
+    }
+  });
 
   if (process.argv.length < 5) {
     title = process.argv[2];
@@ -110,16 +115,18 @@ async function htmlsToHtml(process) {
 
   let currentEpisode = startEpisode;
 
-  let folderPath = `../${folderType}/${title}/`;
-  if (!folderType) folderPath = `../${title}/`;
+  let folderPath = EBOOK_PATH + `/${folderType}/${title}/`;
+  if (!folderType) folderPath = EBOOK_PATH + `/${title}/`;
 
   let filePath =
     folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
-  let outputFilePath = folderPath + `${startEpisode}.txt`;
+  let outputFilePath = folderPath + `${startEpisode}.html`;
 
   async function checkNextFileExist() {
     while (fs.existsSync(filePath + '.html')) {
       htmlToTxt(filePath, outputFilePath);
+
+      console.log(title, currentEpisode);
 
       currentEpisode++;
       filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
@@ -127,21 +134,25 @@ async function htmlsToHtml(process) {
         folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
 
-    let newFileName = folderPath + `${title} ${startEpisode}.txt`;
+    let newFileName = folderPath + `${title} ${startEpisode}`;
     if (startEpisode != currentEpisode - 1) {
       newFileName =
-        folderPath + `${title} ${startEpisode}-${currentEpisode - 1}.txt`;
+        folderPath + `${title} ${startEpisode}-${currentEpisode - 1}`;
     }
 
-    fs.renameSync(outputFilePath, newFileName, error => {
+    fs.renameSync(outputFilePath, newFileName + '.html', error => {
       console.log('txt 파일명 수정 불가!');
     });
+
+    fs.writeFileSync(newFileName + '.txt', '');
   }
 
   await checkNextFileExist();
-  // await deleteRestFiles(folderPath, startEpisode);
+  await deleteRestFiles(folderPath, startEpisode);
 
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
 htmlsToHtml(process);
+
+// module.exports = htmlsToHtml;

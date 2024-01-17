@@ -1,5 +1,3 @@
-// cmd ex: node . '0-1' '제목' 1
-
 // 1. mhtmlToHtml
 // 2. htmlToTxt
 // 3. checkNextFileExist
@@ -8,11 +6,14 @@
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { exec } = require('child_process');
-
-const PYTHON_SCRIPT_PATH = 'mhtmlToHtml.py';
-const RIGHT_ELEMENT_STYLE =
-  'margin-top:67.5pt; margin-bottom:0pt; line-height:13.25pt; padding-top:11pt; padding-bottom:11pt; background-color:#ffffff';
-const DOMAIN = 'ridi';
+const {
+  EBOOK_PATH,
+  PYTHON_SCRIPT_PATH,
+  RIGHT_ELEMENT_STYLE,
+  DOMAIN,
+  FOLDER,
+} = require('./constants');
+// const htmlsToHtml = require('./htmlsToHtml');
 
 const getFileNameTemplate = (domain, episode) => {
   switch (domain) {
@@ -23,7 +24,7 @@ const getFileNameTemplate = (domain, episode) => {
   }
 };
 
-async function mhtmlToHtml(filePath) {
+async function mhtmlToHtml(filePath, ...log) {
   return new Promise((resolve, reject) => {
     exec(`python "${PYTHON_SCRIPT_PATH}" "${filePath}"`, (error, stdout) => {
       if (error) {
@@ -31,7 +32,8 @@ async function mhtmlToHtml(filePath) {
         reject(error);
         return;
       }
-      console.log(filePath);
+      console.log(...log);
+
       resolve(stdout);
     });
   });
@@ -66,7 +68,6 @@ function htmlToTxt(filePath, outputFilePath) {
 
 function deleteRestFiles(folderPath, startEpisode) {
   let episode = startEpisode;
-  // let fileNameTemplate = ` ${episode}화 - 리디`;
   let fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
 
   fs.readdir(folderPath, (err, files) => {
@@ -100,7 +101,6 @@ function deleteRestFiles(folderPath, startEpisode) {
         if (file.endsWith('.mhtml')) {
           ++episode;
           fileNameTemplate = getFileNameTemplate(DOMAIN, episode);
-          // fileNameTemplate = ` ${++episode}화 - 리디`;
         }
       }
     });
@@ -109,49 +109,51 @@ function deleteRestFiles(folderPath, startEpisode) {
 
 async function mhtmlToTxt(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
+  let innerFolder = [];
 
   let folderType;
   switch (folderNumber) {
     case '0':
-      folderType = '0 soon';
+      folderType = '0 read';
+      innerFolder = ['[OLD]', '[60]'];
       break;
     case '1':
-      folderType = '1 read';
+      folderType = '1 continuous';
+      innerFolder = ['[$]'];
       break;
     case '2':
-      folderType = '2 continuous';
-      break;
-    case '3':
-      folderType = '3 test';
+      folderType = '2 test';
       break;
     default:
       folderType = '';
   }
 
+  innerFolder.forEach(folder => {
+    if (FOLDER[folderType][folder][title]) {
+      folderType = '0 read/' + folder;
+    }
+  });
+
   if (process.argv.length < 5) {
-    // folderNumber = '';
     title = process.argv[2];
     startEpisode = process.argv[3];
   }
 
   let currentEpisode = startEpisode;
 
-  let folderPath = `../${folderType}/${title}/`;
-  if (!folderType) folderPath = `../${title}/`;
-  // let folderPath = `../${folderNumber} ${title}/`;
-  // if (!folderNumber || folderNumber === 0) folderPath = `../${title}/`;
-  // let filePath = folderPath + `${title} ${currentEpisode}화 - 리디`
+  let folderPath = EBOOK_PATH + `/${folderType}/${title}/`;
+  if (!folderType) folderPath = EBOOK_PATH + `/${title}/`;
+
   let filePath =
     folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
   let outputFilePath = folderPath + `${startEpisode}.txt`;
 
   async function checkNextFileExist() {
     while (fs.existsSync(filePath + '.mhtml')) {
-      await mhtmlToHtml(filePath);
+      await mhtmlToHtml(filePath, title, +currentEpisode);
       htmlToTxt(filePath, outputFilePath);
 
       currentEpisode++;
-      // filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
       filePath =
         folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
@@ -174,3 +176,4 @@ async function mhtmlToTxt(process) {
 }
 
 mhtmlToTxt(process);
+// htmlsToHtml(process)
