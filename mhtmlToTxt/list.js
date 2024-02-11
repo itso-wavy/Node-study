@@ -20,27 +20,55 @@ function execute(folder, number, callback) {
     fd.forEach(folder => callback(folder));
   });
 }
-function changeName(folder, list) {
+async function changeName(folder, list) {
   const newList = [];
 
-  list.forEach(([writer, title]) => {
+  for (let [writer, title] of list) {
     title = title.replaceAll('?', '_');
-    try {
-      // const content = fs.readFileSync(`${folder}/${title} 1-30.txt`);
 
-      fs.renameSync(
+    await new Promise((resolve, reject) => {
+      fs.rename(
         `${folder}/${title} 1-30.txt`,
-        `${folder}/${writer}${title} 1-30.txt`
+        `${folder}/${writer}${title} 1-30.txt`,
+        err => {
+          if (err) {
+            fs.rename(
+              `${folder}/${title} 0-30.txt`,
+              `${folder}/${writer}${title} 0-30.txt`,
+              err => {
+                if (err) newList.push([writer, title]);
+
+                resolve();
+              }
+            );
+          }
+          resolve();
+        }
       );
-      // fs.writeFileSync(`${folder}/${writer}${title}.txt`, content);
+    });
+  }
 
-      // fs.unlinkSync(`${folder}/${title} 1-30.txt`);
-    } catch (err) {
-      newList.push([writer, title]);
-    }
-  });
-
-  return newList;
+  console.log('newList: ', newList);
 }
+// function changeName(folder, list) {
+//   const newList = [];
+
+//   list.forEach(([writer, title]) => {
+//     title = title.replaceAll('?', '_');
+
+//     fs.rename(
+//       `${folder}/${title} 1-30.txt`,
+//       `${folder}/${writer}${title} 1-30.txt`,
+//       () => {
+//         fs.rename(
+//           `${folder}/${title} 0-30.txt`,
+//           `${folder}/${writer}${title} 0-30.txt`,
+//           () => newList.push([writer, title])
+//         );
+//       }
+//     );
+//   });
+//   // .then(console.log('newList: ', newList));
+// }
 
 module.exports = { makeFolder, execute, changeName };

@@ -11,9 +11,8 @@ const executeCallback = folder => {
 };
 
 // makeFolder(EBOOK_PATH, list);
-// execute(EBOOK_PATH, folderNumber, executeCallback);
-const newList = changeName(EBOOK_PATH, list);
-console.log('newList: ', newList);
+// execute(EBOOK_PATH, folderNumber, executeCallback); // npm run . 5
+changeName(EBOOK_PATH, list);
 
 const getFileNameTemplate = (domain, episode) => {
   switch (domain) {
