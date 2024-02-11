@@ -1,8 +1,19 @@
-// cmd ex: node 'htmlsToHtml' 1 '제목' 1
-
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
-const { EBOOK_PATH, DOMAIN, FOLDER } = require('./constants');
+const { EBOOK_PATH, DOMAIN, FOLDER, list } = require('./constants');
+const BIG_FOLDER = Object.keys(FOLDER);
+const { makeFolder, execute, changeName } = require('./list');
+
+const folderNumber = process.argv[2]?.toString();
+const executeCallback = folder => {
+  const process = { argv: [, , folderNumber, folder, 1] };
+  htmlsToHtml(process);
+};
+
+// makeFolder(EBOOK_PATH, list);
+// execute(EBOOK_PATH, folderNumber, executeCallback);
+const newList = changeName(EBOOK_PATH, list);
+console.log('newList: ', newList);
 
 const getFileNameTemplate = (domain, episode) => {
   switch (domain) {
@@ -85,33 +96,23 @@ async function htmlsToHtml(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
   let innerFolder = [];
 
-  let folderType;
-  switch (folderNumber) {
-    case '0':
-      folderType = '0 read';
-      innerFolder = ['[OLD]', '[60]'];
-      break;
-    case '1':
-      folderType = '1 continuous';
-      innerFolder = ['[$]'];
-      break;
-    case '2':
-      folderType = '2 test';
-      break;
-    default:
-      folderType = '';
-  }
+  let folderType = folderNumber;
+  // let folderType = BIG_FOLDER[folderNumber];
 
-  innerFolder.forEach(folder => {
-    if (FOLDER[folderType][folder][title]) {
-      folderType = '0 read/' + folder;
-    }
-  });
+  // if (process.argv.length < 5) {
+  //   title = process.argv[2];
+  //   startEpisode = process.argv[3];
+  // } else {
+  //   innerFolder = Object.keys(FOLDER[folderType]).filter(
+  //     folder => typeof FOLDER[folderType][folder] === 'object'
+  //   );
 
-  if (process.argv.length < 5) {
-    title = process.argv[2];
-    startEpisode = process.argv[3];
-  }
+  //   innerFolder.forEach(folder => {
+  //     if (FOLDER[folderType] && FOLDER[folderType][folder][title]) {
+  //       folderType = folderType + '/' + folder;
+  //     }
+  //   });
+  // }
 
   let currentEpisode = startEpisode;
 
@@ -129,7 +130,7 @@ async function htmlsToHtml(process) {
       console.log(title, currentEpisode);
 
       currentEpisode++;
-      filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
+      // filePath = folderPath + `${title} ${currentEpisode}화 - 리디`;
       filePath =
         folderPath + title + getFileNameTemplate(DOMAIN, currentEpisode);
     }
@@ -153,6 +154,6 @@ async function htmlsToHtml(process) {
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
-htmlsToHtml(process);
+// htmlsToHtml(process);
 
 // module.exports = htmlsToHtml;

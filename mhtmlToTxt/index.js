@@ -6,13 +6,14 @@
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { exec } = require('child_process');
-const {
+let {
   EBOOK_PATH,
   PYTHON_SCRIPT_PATH,
   RIGHT_ELEMENT_STYLE,
   DOMAIN,
   FOLDER,
 } = require('./constants');
+const BIG_FOLDER = Object.keys(FOLDER);
 // const htmlsToHtml = require('./htmlsToHtml');
 
 const getFileNameTemplate = (domain, episode) => {
@@ -111,32 +112,21 @@ async function mhtmlToTxt(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
   let innerFolder = [];
 
-  let folderType;
-  switch (folderNumber) {
-    case '0':
-      folderType = '0 read';
-      innerFolder = ['[OLD]', '[60]'];
-      break;
-    case '1':
-      folderType = '1 continuous';
-      innerFolder = ['[$]'];
-      break;
-    case '2':
-      folderType = '2 test';
-      break;
-    default:
-      folderType = '';
-  }
-
-  innerFolder.forEach(folder => {
-    if (FOLDER[folderType][folder][title]) {
-      folderType = '0 read/' + folder;
-    }
-  });
+  let folderType = BIG_FOLDER[folderNumber];
 
   if (process.argv.length < 5) {
     title = process.argv[2];
     startEpisode = process.argv[3];
+  } else {
+    innerFolder = Object.keys(FOLDER[folderType]).filter(
+      folder => typeof FOLDER[folderType][folder] === 'object'
+    );
+
+    innerFolder.forEach(folder => {
+      if (FOLDER[folderType] && FOLDER[folderType][folder][title]) {
+        folderType = folderType + '/' + folder;
+      }
+    });
   }
 
   let currentEpisode = startEpisode;
@@ -175,5 +165,17 @@ async function mhtmlToTxt(process) {
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
-mhtmlToTxt(process);
+if (!process.argv[3]) {
+  let folderNumber = process.argv[2];
+  let folderType = BIG_FOLDER[folderNumber];
+
+  for (let title in FOLDER[folderType]) {
+    const startEpisode = FOLDER[folderType][title];
+    if (typeof startEpisode === 'object') continue;
+
+    const process = { argv: [, , folderNumber, title, startEpisode] };
+
+    mhtmlToTxt(process);
+  }
+} else mhtmlToTxt(process);
 // htmlsToHtml(process)
