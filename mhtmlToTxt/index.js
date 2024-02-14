@@ -117,6 +117,8 @@ async function mhtmlToTxt(process) {
   if (process.argv.length < 5) {
     title = process.argv[2];
     startEpisode = process.argv[3];
+
+    console.log(title, startEpisode);
   } else {
     innerFolder = Object.keys(FOLDER[folderType]).filter(
       folder => typeof FOLDER[folderType][folder] === 'object'
@@ -165,17 +167,26 @@ async function mhtmlToTxt(process) {
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
-if (!process.argv[3]) {
+if (!process.argv[3] || (process.argv[3] && process.argv[3].startsWith('['))) {
   let folderNumber = process.argv[2];
   let folderType = BIG_FOLDER[folderNumber];
 
-  for (let title in FOLDER[folderType]) {
-    const startEpisode = FOLDER[folderType][title];
-    if (typeof startEpisode === 'object') continue;
+  if (!process.argv[3])
+    for (let title in FOLDER[folderType]) {
+      const startEpisode = FOLDER[folderType][title];
+      if (typeof startEpisode === 'object') continue;
 
-    const process = { argv: [, , folderNumber, title, startEpisode] };
+      const process = { argv: [, , folderNumber, title, startEpisode] };
 
-    mhtmlToTxt(process);
+      mhtmlToTxt(process);
+    }
+  if (process.argv[3]) {
+    const innerFolderType = process.argv[3].toUpperCase();
+    for (let title in FOLDER[folderType][innerFolderType]) {
+      const startEpisode = FOLDER[folderType][innerFolderType][title];
+      const process = { argv: [, , folderNumber, title, startEpisode] };
+      mhtmlToTxt(process);
+    }
   }
 } else mhtmlToTxt(process);
 // htmlsToHtml(process)
