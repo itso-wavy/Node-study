@@ -4,15 +4,15 @@ const { EBOOK_PATH, DOMAIN, FOLDER, list } = require('./constants');
 const BIG_FOLDER = Object.keys(FOLDER);
 const { makeFolder, execute, changeName } = require('./list');
 
-const folderNumber = process.argv[2]?.toString();
-const executeCallback = folder => {
-  const process = { argv: [, , folderNumber, folder, 1] };
-  htmlsToHtml(process);
-};
+// const folderNumber = process.argv[2]?.toString();
+// const executeCallback = folder => {
+//   const process = { argv: [, , folderNumber, folder, 1] };
+//   htmlsToHtml(process);
+// };
 
 // makeFolder(EBOOK_PATH, list);
 // execute(EBOOK_PATH, folderNumber, executeCallback); // npm run . 5
-changeName(EBOOK_PATH, list);
+// changeName(EBOOK_PATH, list);
 
 const getFileNameTemplate = (domain, episode) => {
   switch (domain) {
@@ -95,23 +95,23 @@ async function htmlsToHtml(process) {
   let [, , folderNumber, title, startEpisode] = process.argv;
   let innerFolder = [];
 
-  let folderType = folderNumber;
-  // let folderType = BIG_FOLDER[folderNumber];
+  // let folderType = folderNumber;
+  let folderType = BIG_FOLDER[folderNumber];
 
-  // if (process.argv.length < 5) {
-  //   title = process.argv[2];
-  //   startEpisode = process.argv[3];
-  // } else {
-  //   innerFolder = Object.keys(FOLDER[folderType]).filter(
-  //     folder => typeof FOLDER[folderType][folder] === 'object'
-  //   );
+  if (process.argv.length < 5) {
+    title = process.argv[2];
+    startEpisode = process.argv[3];
+  } else {
+    innerFolder = Object.keys(FOLDER[folderType]).filter(
+      folder => typeof FOLDER[folderType][folder] === 'object'
+    );
 
-  //   innerFolder.forEach(folder => {
-  //     if (FOLDER[folderType] && FOLDER[folderType][folder][title]) {
-  //       folderType = folderType + '/' + folder;
-  //     }
-  //   });
-  // }
+    innerFolder.forEach(folder => {
+      if (FOLDER[folderType] && FOLDER[folderType][folder][title]) {
+        folderType = folderType + '/' + folder;
+      }
+    });
+  }
 
   let currentEpisode = startEpisode;
 
@@ -153,6 +153,6 @@ async function htmlsToHtml(process) {
   console.log('\nprocess complete ᕙ( •̀ ᗜ •́ )ᕗ');
 }
 
-// htmlsToHtml(process);
+htmlsToHtml(process);
 
 // module.exports = htmlsToHtml;

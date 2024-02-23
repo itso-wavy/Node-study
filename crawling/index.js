@@ -1,3 +1,5 @@
+// node .
+
 const cheerio = require('cheerio');
 const fs = require('fs');
 
@@ -15,8 +17,15 @@ fs.readFile('./list.html', (err, data) => {
 
   const ARRAY = Array.from(SET).sort(); // 이름순 정렬
 
-  const listFilePath = 'list.txt';
-  fs.writeFileSync(listFilePath, ARRAY.join('\n'));
+  const listFilePath = 'result.md';
+  fs.writeFileSync(
+    listFilePath,
+    `## READ✅📛🌐
+  
+## exeption🚫
 
-  console.log('process complete 🦔👍');
+` + ARRAY.join('\n')
+  );
+
+  console.log('process complete ;^P');
 });
